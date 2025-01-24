@@ -146,7 +146,7 @@ The server will start on port `8080` by default.
 
 - **Example curl request:**:
     ```json
-        curl -X POST http://localhost:8080/register \
+        curl -X POST http://localhost:5050/register \
         -H "Content-Type: application/json" \
         -d '{
             "username": "newuser",
