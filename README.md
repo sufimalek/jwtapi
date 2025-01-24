@@ -3,9 +3,9 @@
 ### Directory Structure
 
 ```
-myapp/
+jwtapi/
 ├── cmd/
-│   └── myapp/
+│   └── jwtapi/
 │       └── main.go
 ├── internal/
 │   ├── api/
@@ -37,7 +37,7 @@ myapp/
 
 
 ```markdown
-# MyApp - Go Application with JWT Authentication and MySQL
+# jwtapi - Go Application with JWT Authentication and MySQL
 
 This is a production-ready Go application with JWT authentication, user management, and MySQL integration. It uses `gorilla/mux` for routing and follows a well-structured directory layout.
 
@@ -69,7 +69,7 @@ DB_USERNAME=root
 DB_PASSWORD=password
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=myapp
+DB_NAME=jwtapi
 SERVER_PORT=8080
 JWT_SECRET=my_secret_key
 ```
@@ -79,7 +79,7 @@ JWT_SECRET=my_secret_key
 1. Create a MySQL database:
 
    ```sql
-   CREATE DATABASE myapp;
+   CREATE DATABASE jwtapi;
    ```
 
 2. Run the migration to create the `users` table:
@@ -110,7 +110,7 @@ go mod tidy
 To start the application, run:
 
 ```bash
-go run cmd/myapp/main.go
+go run cmd/jwtapi/main.go
 ```
 
 The server will start on port `8080` by default.
@@ -255,7 +255,7 @@ The server will start on port `8080` by default.
 
 ## Logging
 
-Logs are printed to the console with the prefix `myapp:`. You can replace this with a more advanced logging library like `zap` or `logrus` if needed.
+Logs are printed to the console with the prefix `jwtapi:`. You can replace this with a more advanced logging library like `zap` or `logrus` if needed.
 
 ---
 
@@ -297,7 +297,7 @@ To test the application, you can use tools like [Postman](https://www.postman.co
 ---
 
 ## **Overview**
-- **Promtail**: Collects logs from your `myapp` API and sends them to Loki.
+- **Promtail**: Collects logs from your `jwtapi` API and sends them to Loki.
 - **Loki**: Stores logs and allows querying them using LogQL.
 - **Grafana**: Visualizes logs stored in Loki.
 
@@ -306,28 +306,28 @@ To test the application, you can use tools like [Postman](https://www.postman.co
 ## **Prerequisites**
 - Docker and Docker Compose installed.
 - Basic understanding of Docker and YAML configuration.
-- Your `myapp` API configured to write logs to a file (e.g., `/var/log/myapp/myapp.log`).
+- Your `jwtapi` API configured to write logs to a file (e.g., `/var/log/jwtapi/jwtapi.log`).
 
 ---
 
 ## **Setup**
 
 ### **Docker Compose Configuration**
-The `docker-compose.yml` file defines the services for `myapp`, Promtail, Loki, and Grafana. Ensure the following configuration is present:
+The `docker-compose.yml` file defines the services for `jwtapi`, Promtail, Loki, and Grafana. Ensure the following configuration is present:
 
 ```yaml
 version: '3.7'
 
 services:
-  myapp:
-    image: myapp
+  jwtapi:
+    image: jwtapi
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
     volumes:
-      - /var/log/myapp:/var/log/myapp
+      - /var/log/jwtapi:/var/log/jwtapi
     env_file:
       - .env
     depends_on:
@@ -337,7 +337,7 @@ services:
     image: grafana/promtail:latest
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yml
-      - /var/log/myapp:/var/log/myapp
+      - /var/log/jwtapi:/var/log/jwtapi
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
@@ -371,7 +371,7 @@ volumes:
 ---
 
 ### **Promtail Configuration**
-Promtail is responsible for collecting logs from your `myapp` API and sending them to Loki. Create a `promtail-config.yaml` file with the following content:
+Promtail is responsible for collecting logs from your `jwtapi` API and sending them to Loki. Create a `promtail-config.yaml` file with the following content:
 
 ```yaml
 server:
@@ -385,13 +385,13 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: myapp
+  - job_name: jwtapi
     static_configs:
       - targets:
           - localhost
         labels:
-          job: myapp
-          __path__: /var/log/myapp/*.log
+          job: jwtapi
+          __path__: /var/log/jwtapi/*.log
 ```
 
 ---
@@ -477,9 +477,9 @@ datasources:
 4. Select the **Loki** data source.
 5. Query logs using LogQL. For example:
    ```logql
-   {job="myapp"}
+   {job="jwtapi"}
    ```
-   This will display logs from your `myapp` API.
+   This will display logs from your `jwtapi` API.
 
 ---
 
@@ -502,10 +502,10 @@ datasources:
 - Ensure the `provisioning/datasources/loki-datasource.yaml` file is correctly mounted.
 
 ### **3. Log File Not Found**
-- Verify that your `myapp` API is writing logs to `/var/log/myapp/myapp.log`.
+- Verify that your `jwtapi` API is writing logs to `/var/log/jwtapi/jwtapi.log`.
 - Check the file permissions:
   ```bash
-  docker-compose exec myapp ls -l /var/log/myapp
+  docker-compose exec jwtapi ls -l /var/log/jwtapi
   ```
 
 ---
@@ -517,7 +517,7 @@ datasources:
 
 ---
 
-This setup will allow you to collect, store, and visualize logs from your `myapp` API using Grafana, Loki, and Promtail. Let me know if you need further assistance!
+This setup will allow you to collect, store, and visualize logs from your `jwtapi` API using Grafana, Loki, and Promtail. Let me know if you need further assistance!
 
 
 
