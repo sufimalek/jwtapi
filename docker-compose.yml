@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  jwtapi:
+    image: jwtapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"
+    volumes:
+      - /var/log/jwtapi:/var/log/jwtapi
+    env_file:
+      - .env  # Load the entire .env file
+    # environment:
+    #   - LOG_FILE=/var/log/jwtapi/jwtapi.log
+    depends_on:
+      - loki
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - /var/log/jwtapi:/var/log/jwtapi
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/tmp/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - loki
+
+volumes:
+  loki_data:
+  grafana_data:
+
+networks:
+  #create the zoodmall_networks automatically
+  default:
+      name: zoodmall-network
+      external: true
