@@ -27,6 +27,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser, err := h.UserService.RegisterUser(&user)
+	utils.Log.Info("user created!!")
 	if err != nil {
 		utils.Log.Error(err.Error())
 		utils.Log.Info(err.Error())
