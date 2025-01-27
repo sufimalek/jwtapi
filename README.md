@@ -316,7 +316,7 @@ To test the application, you can use tools like [Postman](https://www.postman.co
 The `docker-compose.yml` file defines the services for `jwtapi`, Promtail, Loki, and Grafana. Ensure the following configuration is present:
 
 ```yaml
-version: '3.7'
+version: '3.8'
 
 services:
   jwtapi:
@@ -325,11 +325,13 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "5050:5050"
     volumes:
       - /var/log/jwtapi:/var/log/jwtapi
     env_file:
-      - .env
+      - .env  # Load the entire .env file
+    # environment:
+    #   - LOG_FILE=/var/log/jwtapi/jwtapi.log
     depends_on:
       - loki
 
@@ -348,24 +350,30 @@ services:
       - "3100:3100"
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
-      - loki_data:/tmp/loki
+      - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
 
   grafana:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./provisioning:/etc/grafana/provisioning
+      - ./datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - loki
 
 volumes:
   loki_data:
   grafana_data:
+
+networks:
+  #create the zoodmall_networks automatically
+  default:
+      name: zoodmall-network
+      external: true
 ```
 
 ---
@@ -404,37 +412,47 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
+  grpc_listen_port: 9095
 
 common:
-  path_prefix: /tmp/loki
+  path_prefix: /loki
   storage:
     filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
   replication_factor: 1
   ring:
+    # instance_addr: 127.0.0.1
     kvstore:
       store: inmemory
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
-      object_store: filesystem
-      schema: v11
-      index:
-        prefix: index_
-        period: 168h
+  - from: 2020-05-15
+    store: tsdb
+    object_store: filesystem
+    schema: v13
+    index:
+      prefix: index_
+      period: 24h
 
-filesystem:
-  directory: /tmp/loki/chunks
+storage_config:
+  filesystem:
+    directory: /loki/chunks
 
 limits_config:
   reject_old_samples: true
   reject_old_samples_max_age: 168h
   ingestion_rate_mb: 16
   ingestion_burst_size_mb: 32
-  allow_structured_metadata: false
+  allow_structured_metadata: false  # Disable structured metadata for now
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+  rule_path: /loki/rules-temp
 ```
 
 ---
@@ -519,7 +537,26 @@ datasources:
 
 This setup will allow you to collect, store, and visualize logs from your `jwtapi` API using Grafana, Loki, and Promtail. Let me know if you need further assistance!
 
+---
 
+### **Following commands have been used in implementation of this project for docker.**
+
+```
+docker-compose exec jwtapi cat /var/log/jwtapi/jwtapi.log
+docker exec -it jwtapi sh
+docker-compose logs jwtapi
+docker ps -a
+docker logs loki
+docker logs jwtapi
+docker exec -it jwtapi_jwtapi_1 ping mysql
+docker network inspect zoodmall-network
+docker inspect jwtapi
+docker-compose down
+docker-compose up --build
+docker-compose up -d
+sudo systemctl restart docker
+docker-compose config
+```
 
 ---
 
